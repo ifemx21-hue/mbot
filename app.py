@@ -34,7 +34,8 @@ def save_db(data):
     with open(DB_FILE, "w") as f: json.dump(data, f, indent=4)
 
 # Initialize Telethon Bot Client
-bot = TelegramClient('mbot_render_session', API_ID, API_HASH)
+bot = TelegramClient('mbot_render_fresh_v2', API_ID, API_HASH)
+
 
 AVAILABLE_EMOJIS = ["❤️", "👍", "🔥", "🙏", "🎉", "🏆", "😍", "💯", "😭", "⚡"]
 
