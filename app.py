@@ -17,13 +17,13 @@ def run_web_server():
     app.run(host='0.0.0.0', port=port)
 
 # ==========================================================================
-# ⚙️ TELEGRAM BOT CONFIGURATION
+# ⚙️ TELEGRAM BOT CONFIGURATION (WITH YOUR FRESH NEW TOKEN)
 # ==========================================================================
-BOT_TOKEN = "8933958981:AAGm3jbwzEWCywAyiyAkryfCnvWg4iDkywQ"
+BOT_TOKEN = "7996319660:AAF0NSlTOy4l3VCehfhgOZ4DSSHozJ8bw9I"
 API_ID = 37300120               
 API_HASH = "aa35ee2b1b569c1adabfdc2adc9e120c"
 
-bot = TelegramClient('render_font_session_v2', API_ID, API_HASH)
+bot = TelegramClient('render_font_fresh_session', API_ID, API_HASH)
 
 # ==========================================================================
 # 🗺️ PERFECTLY ALIGNED FONT DICTIONARIES (52 Characters Each)
@@ -56,7 +56,6 @@ async def convert_text(event):
     output = "✨ **Here are your Stylish Fonts:**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n"
     
     for font_name, font_chars in fonts_map.items():
-        # Dynamic translation table with strict length compliance
         trans_rule = str.maketrans(normal_chars, font_chars)
         converted = user_text.translate(trans_rule)
         output += f"🌟 **{font_name}:**\n`{converted}`\n\n"
@@ -71,7 +70,7 @@ if __name__ == '__main__':
     print("🌐 Starting Keep-Alive Web Server...")
     Thread(target=run_web_server, daemon=True).start()
 
-    print("🟢 Bot Engine Connecting to Telegram...")
+    print("🟢 Bot Engine Connecting to Telegram with New Token...")
     bot.start(bot_token=BOT_TOKEN)
     bot.run_until_disconnected()
     
