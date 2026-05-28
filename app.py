@@ -1,7 +1,7 @@
 import os
 import json
+import asyncio
 import threading
-import time
 import streamlit as st
 from telethon import TelegramClient, events, Button
 
@@ -12,7 +12,7 @@ st.set_page_config(page_title="MBOT SaaS Engine", page_icon="🔥", layout="cent
 st.title("🔥 MBOT (REACTION + VIEWS) SaaS Engine")
 st.markdown("---")
 st.success("🤖 Bot Status: Operational 24/7 Live 🟢")
-st.info("This web page keeps your Render service active. Do not close if checking logs.")
+st.info("This web page keeps your Render service active.")
 
 # ==========================================================================
 # ⚙️ CONFIGURATION & DATABASE
@@ -33,13 +33,13 @@ def load_db():
 def save_db(data):
     with open(DB_FILE, "w") as f: json.dump(data, f, indent=4)
 
-# Initialize Telethon Bot Client with a Fresh Active Session
-bot = TelegramClient('mbot_render_fresh_final_v3', API_ID, API_HASH)
+# Create a highly unique session name to bypass old database conflicts
+bot = TelegramClient('mbot_render_final_loop_v4', API_ID, API_HASH)
 
 AVAILABLE_EMOJIS = ["❤️", "👍", "🔥", "🙏", "🎉", "🏆", "😍", "💯", "😭", "⚡"]
 
 # ==========================================================================
-# 🏠 MAIN MENU LAYOUT (Bade Buttons - Maximum 2 Per Row)
+# 🏠 MAIN MENU LAYOUT
 # ==========================================================================
 def get_main_keyboard():
     return bot.build_reply_markup([
@@ -82,8 +82,8 @@ async def handle_menu_clicks(event):
         if len(user_projects) >= db["users"].get(uid, {}).get("projects_count", 1):
             limit_txt = (
                 "🚫 **Project Creation Limit Reached**\n\n"
-                "Your current plan allows a maximum of 1 projects, and you have reached this limit.\n\n"
-                "To create more projects:\n• Upgrade your plan for higher limits\n• Contact admin to increase your project quota"
+                "Your current plan allows a maximum of 1 projects.\n\n"
+                "To create more projects upgrade your plan."
             )
             await event.respond(limit_txt)
             return
@@ -142,11 +142,9 @@ async def handle_menu_clicks(event):
 # ==========================================================================
 # 📊 MULTI-STEP WIZARD ENGINE
 # ==========================================================================
-
 async def send_step_1_emojis(event, uid):
     db = load_db()
     selected = db["users"][uid]["creation_flow"]["emojis"]
-    
     txt = f"📝 **Step 1 • Select Emojis**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nChoose reactions for your posts.\n\n**Selected ({len(selected)}):** {', '.join(selected) if selected else 'None'}\n\n⭐ _Tap emojis to add/remove. Tap ✅ Done when finished._"
     
     grid = []
@@ -158,19 +156,15 @@ async def send_step_1_emojis(event, uid):
             grid.append(row)
             row = []
     if row: grid.append(row)
-    
     grid.append([Button.inline("✅ Done & Continue", data="step1_done")])
     
-    if hasattr(event, 'click'):
-        await event.edit(txt, buttons=grid)
-    else:
-        await event.respond(txt, buttons=grid)
+    if hasattr(event, 'click'): await event.edit(txt, buttons=grid)
+    else: await event.respond(txt, buttons=grid)
 
 async def send_step_2_quantity(event, uid):
     db = load_db()
     current = db["users"][uid]["creation_flow"]["rxn_count"]
     txt = f"🎈 **Step 2 • Total Reactions**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nHow many reactions per post?\n\n👉 **Current Selection:** `{current} reactions`"
-    
     buttons = [
         [Button.inline("🔹 10", data="q_10"), Button.inline("🔹 20", data="q_20"), Button.inline(f"🟢 {current}" if current==30 else "🔹 30", data="q_30")],
         [Button.inline("🔒 50", data="locked"), Button.inline("🔒 70", data="locked"), Button.inline("🔒 100", data="locked")],
@@ -182,8 +176,7 @@ async def send_step_2_quantity(event, uid):
 async def send_step_3_distribution(event, uid):
     db = load_db()
     current = db["users"][uid]["creation_flow"]["dist"]
-    txt = f"⚙️ **Step 3 • Distribution Type**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nWhat pattern should the reactions follow?\n\n🎲 **Random** - Each emoji gets 7-8 reactions\n⚖️ **All Equally** - Each emoji gets exactly 7 reactions"
-    
+    txt = f"⚙️ **Step 3 • Distribution Type**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nWhat pattern should the reactions follow?"
     buttons = [
         [Button.inline(f"🟢 🎲 Random" if current=="Random" else "🎲 Random", data="dist_Random")],
         [Button.inline(f"🟢 ⚖️ All Equally" if current=="Equally" else "⚖️ All Equally", data="dist_Equally")],
@@ -195,8 +188,7 @@ async def send_step_3_distribution(event, uid):
 async def send_step_4_speed(event, uid):
     db = load_db()
     current = db["users"][uid]["creation_flow"]["speed"]
-    txt = f"⚡ **STEP 4 • Choose Speed**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nChoose delivery speed:\n\n👉 **Selected:** ⚡ {current} Delivery"
-    
+    txt = f"⚡ **STEP 4 • Choose Speed**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n👉 **Selected:** ⚡ {current} Delivery"
     buttons = [
         [Button.inline("🟢 Fast ⚡" if current=="Fast" else "Fast ⚡", data="spd_Fast"), Button.inline("Medium ⏱️", data="locked"), Button.inline("Slow 🐢", data="locked")],
         [Button.inline("🔙 Back", data="back_to_step3"), Button.inline("🟢 Continue", data="step4_done")]
@@ -206,8 +198,7 @@ async def send_step_4_speed(event, uid):
 async def send_step_5_views(event, uid):
     db = load_db()
     current = db["users"][uid]["creation_flow"]["views"]
-    txt = f"👁️ **STEP 5 • Views Configuration**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nHow many views per post?\n\n👉 **Selected:** `{current} views (instant)`"
-    
+    txt = f"👁️ **STEP 5 • Views Configuration**\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n👉 **Selected:** `{current} views`"
     buttons = [
         [Button.inline("0 Views", data="v_0"), Button.inline("10 Views", data="v_10"), Button.inline(f"🟢 30 Views" if current==30 else "30 Views", data="v_30")],
         [Button.inline("🔒 50", data="locked"), Button.inline("🔒 100", data="locked"), Button.inline("⚙️ CUSTOM", data="locked")],
@@ -219,22 +210,14 @@ async def send_final_review(event, uid):
     db = load_db()
     flow = db["users"][uid]["creation_flow"]
     target = db["users"][uid]["temp_project_target"]
-    
     txt = (
         "✨ **FINAL REVIEW** ✨\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"📺 **Channel:** `Shubh Earning 💸` ({target})\n\n"
-        "╭⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f" 😊 Emojis: {', '.join(flow['emojis']) if flow['emojis'] else '❤️, 🔥, 😁'}\n"
-        f" 🎯 Mode: ALL\n"
+        f"📺 **Channel:** {target}\n"
+        f" 😊 Emojis: {', '.join(flow['emojis']) if flow['emojis'] else '❤️, 🔥'}\n"
         f" 🔴 Reactions: {flow['rxn_count']}\n"
-        f" 👁️ Views: 👁️ {flow['views']} (⚡ instant)\n"
-        f" Reaction Delivery: ⚡ Instant\n"
+        f" 👁️ Views: {flow['views']}\n"
         f" ⚙️ Distribution: {flow['dist']}\n"
-        " 🔀 Randomize: OFF\n"
-        "╰⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
     )
-    
     buttons = [
         [Button.inline("🟢 Save Changes & Start", data="save_project_final")],
         [Button.inline("🛠️ EDIT", data="back_to_step5"), Button.inline("❌ Cancel", data="main_menu")]
@@ -281,47 +264,36 @@ async def callback_handler(event):
     elif data.startswith("v_"):
         db["users"][uid]["creation_flow"]["views"] = int(data.split("_")[1])
         save_db(db)
+        await event.answer("Selection Saved!")
         await send_step_5_views(event, uid)
         
     elif data == "step5_done": await send_final_review(event, uid)
-    
     elif data == "save_project_final":
         target = db["users"][uid]["temp_project_target"]
         flow = db["users"][uid]["creation_flow"]
-        
-        db["projects"][target] = {
-            "owner": uid,
-            "title": "Shubh Earning 💸",
-            "emojis": flow["emojis"] if flow["emojis"] else ["❤️", "🔥"],
-            "rxn_count": flow["rxn_count"],
-            "views": flow["views"]
-        }
+        db["projects"][target] = {"owner": uid, "title": "Auto System", "emojis": flow["emojis"], "rxn_count": flow["rxn_count"], "views": flow["views"]}
         save_db(db)
-        await event.edit("✅ **Project successfully saved and auto-system is live!**")
-        
-    elif data == "main_menu":
-        await event.edit("🏠 **Main Menu Loaded.** Use keyboard buttons below to navigate.", buttons=None)
-        
+        await event.edit("✅ **Project successfully saved!**")
+    elif data == "main_menu": await event.edit("🏠 **Main Menu Loaded.**", buttons=None)
     elif data == "back_to_step1": await send_step_1_emojis(event, uid)
     elif data == "back_to_step2": await send_step_2_quantity(event, uid)
     elif data.startswith("back_to_step3"): await send_step_3_distribution(event, uid)
     elif data == "back_to_step4": await send_step_4_speed(event, uid)
-    elif data.startswith("back_to_step5") or data == "back_to_step5": await send_step_5_views(event, uid)
-    elif data == "locked": await event.answer("⚠️ Feature locked in free layout!", alert=True)
+    elif data == "back_to_step5": await send_step_5_views(event, uid)
+    elif data == "locked": await event.answer("⚠️ Locked in free version!", alert=True)
 
 # ==========================================================================
-# 🏁 AUTOMATIC THREAD EXECUTION FOR SERVER HOOKS (FIXED TYPO HERE)
+# 🏁 PRODUCTION ASYNCIO COROUTINE EXECUTION
 # ==========================================================================
-def start_telegram_bot():
-    print("🚀 Starting Telethon Bot Engine with new Token...")
-    try:
-        bot.start(bot_token=BOT_TOKEN)
-        bot.run_until_disconnected()
-    except Exception as e:
-        print(f"❌ Error starting bot: {e}")
+def run_bot_async():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    print("🚀 Telethon Engine Starting on Production Loop...")
+    loop.run_until_complete(bot.start(bot_token=BOT_TOKEN))
+    print("🟢 Bot is authorized and listening for messages!")
+    loop.run_until_disconnected()
 
-if "bot_thread_started" not in st.session_state:
-    st.session_state.bot_thread_started = True
-    t = threading.Thread(target=start_telegram_bot, daemon=True)
-    t.start()
+if "bot_started" not in st.session_state:
+    st.session_state.bot_started = True
+    threading.Thread(target=run_bot_async, daemon=True).start()
     
