@@ -20,7 +20,7 @@ def run_web_server():
 # ==========================================================================
 # ⚙️ TELEGRAM BOT CONFIGURATION
 # ==========================================================================
-BOT_TOKEN = "8933958981:AAGm3jbwzEWCywAyiyAkryfCnvWg4iDkywQ"
+BOT_TOKEN = "7996319660:AAF0NSlTOy4l3VCehfhgOZ4DSSHozJ8bw9I"
 API_ID = 37300120               
 API_HASH = "aa35ee2b1b569c1adabfdc2adc9e120c"
 
