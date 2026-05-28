@@ -33,14 +33,13 @@ def load_db():
 def save_db(data):
     with open(DB_FILE, "w") as f: json.dump(data, f, indent=4)
 
-# Initialize Telethon Bot Client
-bot = TelegramClient('mbot_render_fresh_v2', API_ID, API_HASH)
-
+# Initialize Telethon Bot Client with a Fresh Active Session
+bot = TelegramClient('mbot_render_fresh_final_v3', API_ID, API_HASH)
 
 AVAILABLE_EMOJIS = ["❤️", "👍", "🔥", "🙏", "🎉", "🏆", "😍", "💯", "😭", "⚡"]
 
 # ==========================================================================
-# 🏠 MAIN MENU LAYOUT (Big Buttons for Mobile)
+# 🏠 MAIN MENU LAYOUT (Bade Buttons - Maximum 2 Per Row)
 # ==========================================================================
 def get_main_keyboard():
     return bot.build_reply_markup([
@@ -307,19 +306,22 @@ async def callback_handler(event):
     elif data == "back_to_step2": await send_step_2_quantity(event, uid)
     elif data.startswith("back_to_step3"): await send_step_3_distribution(event, uid)
     elif data == "back_to_step4": await send_step_4_speed(event, uid)
-    elif data == "back_to_step5": await send_step_5_views(event, uid)
+    elif data.startswith("back_to_step5") or data == "back_to_step5": await send_step_5_views(event, uid)
     elif data == "locked": await event.answer("⚠️ Feature locked in free layout!", alert=True)
 
 # ==========================================================================
-# 🏁 AUTOMATIC THREAD EXECUTION FOR SERVER HOOKS
+# 🏁 AUTOMATIC THREAD EXECUTION FOR SERVER HOOKS (FIXED TYPO HERE)
 # ==========================================================================
 def start_telegram_bot():
-    print("🚀 Starting Telethon Bot Engine...")
-    bot.start(bot_token=BOT_TOKEN)
-    bot.run_until_disconnected()
+    print("🚀 Starting Telethon Bot Engine with new Token...")
+    try:
+        bot.start(bot_token=BOT_TOKEN)
+        bot.run_until_disconnected()
+    except Exception as e:
+        print(f"❌ Error starting bot: {e}")
 
 if "bot_thread_started" not in st.session_state:
     st.session_state.bot_thread_started = True
     t = threading.Thread(target=start_telegram_bot, daemon=True)
     t.start()
-          
+    
