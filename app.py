@@ -17,7 +17,7 @@ st.info("This web page keeps your Render service active. Do not close if checkin
 # ==========================================================================
 # ⚙️ CONFIGURATION & DATABASE
 # ==========================================================================
-BOT_TOKEN = "8631574416:AAF81YgaBDDNKLAkDU_-1rkNhlEoMgEL9bc"
+BOT_TOKEN = "8933958981:AAGm3jbwzEWCywAyiyAkryfCnvWg4iDkywQ"
 API_ID = 37300120               
 API_HASH = "aa35ee2b1b569c1adabfdc2adc9e120c"
 
